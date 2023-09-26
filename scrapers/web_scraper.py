@@ -59,11 +59,17 @@ for url in character_urls:
     # svg_count = len(div_wea.find("svg"))
 
     # 有些逆天，按理说我这里寻找的是角色简介，但是找到的却是武器类型
-    text_intro = div_content.find("p", class_="text-base").text.strip()
+    text_weapon = div_content.find("p", class_="text-base").text.strip()
+
+    pic_gift = div_content.find("div", class_=["flex", "flex-col", "md:flex-row", "mt-4", "space-y-4", "md:space-y-0", "md:space-x-4", "px-4", "md:px-8", "svelte-ti79zj"])
+    pic_sub_gift = pic_gift.find("div", class_=["text-gray-200", "rounded-xl", "border", "border-gray-200", "border-opacity-25", "p-4", "flex", "svelte-ti79zj"])
+    pic_sub_sub_gift = pic_sub_gift.find("div", class_=["mr-4", "svelte-ti79zj"])
+    # pic_sub_sub_gift_name = pic_sub_sub_gift.find("p", class_="svelte-ti79zj").text.strip()
 
     # 打印提取的内容
     print(f"网页链接: {url}")
     print(f"角色名称: {h1_text}")
     print(f"元素力图片链接: {img_src}")
-    print(f"武器类型: {text_intro}")
+    print(f"武器类型: {text_weapon}")
+    print(f"tianfu:{pic_gift}")
     print("-" * 40)
