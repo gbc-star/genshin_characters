@@ -1,3 +1,5 @@
+import traceback
+
 import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -43,52 +45,77 @@ for link in character_links:
         # print(character_urls)
 
 for url in character_urls:
-    # 发送 GET 请求获取网页内容
-    response = requests.get(url)
-    # 使用 BeautifulSoup 解析网页内容
-    soup = BeautifulSoup(response.text, "html.parser")
-    div_main = soup.find("main")
-    div_container = div_main.find("div", class_=["lg:ml-64"])
-    div_row = div_container.find("div", class_=["flex"])
+    try:
+        # 发送 GET 请求获取网页内容
+        response = requests.get(url)
+        # 使用 BeautifulSoup 解析网页内容
+        soup = BeautifulSoup(response.text, "html.parser")
+        div_main = soup.find("main")
+        div_container = div_main.find("div", class_=["lg:ml-64"])
+        div_row = div_container.find("div", class_=["flex"])
 
-    # 这层就是包含立绘的最后一层了
-    div_col = div_row.find("div", class_=["flex-col"])
+        # 这层就是包含立绘的最后一层了
+        div_col = div_row.find("div", class_=["flex-col"])
 
-    # 立绘图片链接，全部例为：https://paimon.moe/images/characters/full/albedo.png
-    div_lihui = div_col.find("img")["src"]
+        # 立绘图片链接，全部例为：https://paimon.moe/images/characters/full/albedo.png
+        div_lihui = div_col.find("img")["src"]
 
-    # 这层是不包含立绘的最后一层
-    div_content = div_col.find("div", class_=["mt-4"])
+        # 这层是不包含立绘的最后一层
+        div_content = div_col.find("div", class_=["mt-4"])
 
-    # 往下开始逐层提取
+        # 往下开始逐层提取
 
-    # 角色名称和元素力图片层
-    div_chara = div_content.find("div", class_=["items-center"])
-    # 提取角色名称
-    h1_text = div_chara.find("h1").text.strip()
-    # 提取 img 标签的 src 属性,元素力图片链接，全部例为：https://paimon.moe/images/elements/geo.png
-    img_src = div_chara.find("img")["src"]
+        # 角色名称和元素力图片层
+        div_chara = div_content.find("div", class_=["items-center"])
+        # 提取角色名称
+        h1_text = div_chara.find("h1").text.strip()
+        # 提取 img 标签的 src 属性,元素力图片链接，全部例为：https://paimon.moe/images/elements/geo.png
+        img_src = div_chara.find("img")["src"]
 
-    # 太逆天了，鬼知道什么问题，常规层找不到数据但是可以在上层找到（p_weapon），武器类型
-    div_weapon = div_content.find("div", class_=["text-legendary-from"])
-    p_weapon = div_weapon.find("p", class_="text-base").text.strip()
-    # p_weapon = div_content.find("p", class_="text-base").text.strip()
-    # 保留着这部分吧，也算是值得纪念的经历了，实际上我错误的理解了一个问题：
-    # beautiful soup的这个find方法，class里面可以添加多个属性（["","",""]）
-    # 我之前一直以为，比如一个标签有12345属性，那么我find如果写12345就会精准找到这个标签
-    # 但实际上这个是找到其中一个，比如我find12345，返回的就是第一个包含这五个之一的标签
-    # 这也就导致什么问题呢，已知有两个div，class"1" "2" "3"和class"2" "3" "4"
-    # 如果我find234，找到的不会是第二个标签而是第一个，这里我是严重错误理解的
+        # 太逆天了，鬼知道什么问题，常规层找不到数据但是可以在上层找到（p_weapon），武器类型和角色星级
+        # 承接上个注释，见下面一大段，实际上是我严重错误理解了
+        # 提取武器类型
+        div_weapon = div_content.find("div", class_=["text-2xl"])
+        p_weapon = div_weapon.find("p", class_="text-base").text.strip()
+        # 提取角色星级
+        star_tags = div_weapon.find_all("svg")
+        svg_count = len(star_tags)-1
 
-    p_intro_text = div_content.find("p", class_="text-gray-200").text.strip()
+        # p_weapon = div_content.find("p", class_="text-base").text.strip()
+        # 保留着这部分吧，也算是值得纪念的经历了，实际上我错误的理解了一个问题：
+        # beautiful soup的这个find方法，class里面可以添加多个属性（["","",""]）
+        # 我之前一直以为，比如一个标签有12345属性，那么我find如果写12345就会精准找到这个标签
+        # 但实际上这个是找到其中一个，比如我find12345，返回的就是第一个包含这五个之一的标签
+        # 这也就导致什么问题呢，已知有两个div，class"1" "2" "3"和class"2" "3" "4"
+        # 如果我find234，找到的不会是第二个标签而是第一个，这里我是严重错误理解的
 
-    # 打印提取的内容
-    print(f"网页链接: {url}")
-    print(f"角色名称: {h1_text}")
-    print(f"立绘链接：{div_lihui}")
-    print(f"元素力图片链接: {img_src}")
-    print(f"武器类型: {p_weapon}")
-    print(f"角色介绍:{p_intro_text}")
+        # 提取角色简介
+        p_intro_text = div_content.find("p", class_="text-gray-200").text.strip()
+
+        # 提取天赋书链接和周本材料链接，
+        # 例子为：https://paimon.moe/images/items/teachings_of_ballad.png
+        # https: // paimon.moe / images / items / tusk_of_monoceros_caeli.png
+        div_gift = div_content.find("div", class_="space-y-4")
+        # 跳了几层，没必要抽丝剥茧
+        div_sub_gift = div_gift.find("div", class_="mr-2")
+        pic_gift = div_sub_gift.find("img")["src"]
+
+        # 打印提取的内容
+        print(f"网页链接: {url}")
+        print(f"角色名称: {h1_text}")
+        print(f"立绘链接：{div_lihui}")
+        print(f"元素力图片链接: {img_src}")
+        print(f"武器类型: {p_weapon}")
+        print(f"星级：{svg_count}")
+        print(f"角色介绍:{p_intro_text}")
+        print(f"天赋书图片链接:{pic_gift}")
+
+    except requests.exceptions.RequestException as e:
+        print(f"发生请求错误: {e}")
+        traceback.print_exc()  # 打印异常信息，包括行数
+    except AttributeError as e:
+        print(f"发生属性错误: {e}")
+        traceback.print_exc()  # 打印异常信息，包括行数
     print("-" * 40)
 
 # 关闭浏览器
