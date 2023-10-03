@@ -100,7 +100,7 @@ for url in character_urls:
 
         # p_weapon = div_content.find("p", class_="text-base").text.strip()
         # 保留着这部分吧，也算是值得纪念的经历了，实际上我错误的理解了一个问题：
-        # beautiful soup的这个find方法，class里面可以添加多个属性（["","",""]）
+        # beautiful soup的这个find()方法，class里面可以添加多个属性（["","",""]）
         # 我之前一直以为，比如一个标签有12345属性，那么我find如果写12345就会精准找到这个标签
         # 但实际上这个是找到其中一个，比如我find12345，返回的就是第一个包含这五个之一的标签
         # 这也就导致什么问题呢，已知有两个div，class"1" "2" "3"和class"2" "3" "4"
